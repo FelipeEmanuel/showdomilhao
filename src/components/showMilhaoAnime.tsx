@@ -41,7 +41,7 @@ export default function ShowMilhaoAnime({ onBack }: showMilhaoAnimeProps) {
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(45);
   const [quizStarted, setQuizStarted] = useState(false);
   const [timeUp, setTimeUp] = useState(false);
   const [checkingAnswer, setCheckingAnswer] = useState(false);
@@ -152,7 +152,7 @@ export default function ShowMilhaoAnime({ onBack }: showMilhaoAnimeProps) {
   const handleNextQuestion = () => {
     setShowAnswer(false);
     setSelectedAnswer(null);
-    setTimer(30);
+    setTimer(45);
     setTimeUp(false);
     setCurrentQuestionIndex(currentQuestionIndex + 1);
     setEliminatedOptions(new Set());
@@ -170,7 +170,7 @@ export default function ShowMilhaoAnime({ onBack }: showMilhaoAnimeProps) {
   const startQuiz = () => {
     setQuizStarted(true);
     setCurrentQuestionIndex(0);
-    setTimer(30);
+    setTimer(45);
     setSelectedAnswer(null);
     setShowAnswer(false);
     setTimeUp(false);

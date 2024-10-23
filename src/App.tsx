@@ -3,13 +3,15 @@ import ShowMilhaoGeral from "./components/showMilhaoGeral";
 import "./index.css";
 import { Box, Button, Typography } from "@mui/material";
 import ShowMilhaoAnime from "./components/showMilhaoAnime";
+import QuizComumGeral from "./components/quizComumGeral";
+import QuizComumAnime from "./components/quizComumAnime";
 
 function App() {
   const [selectedGame, setSelectedGame] = useState<
-    "milhaoGeral" | "milhaoAnime" | null
+    "milhaoGeral" | "milhaoAnime" | null | "comum" | "anime"
   >(null);
 
-  const handleGameSelection = (game: "milhaoGeral" | "milhaoAnime") => {
+  const handleGameSelection = (game: "milhaoGeral" | "milhaoAnime" | "comum" | "anime") => {
     setSelectedGame(game);
   };
 
@@ -39,7 +41,7 @@ function App() {
               justifyContent="center"
               gap={5}
               mb={4}
-              width="50%"
+              width="25%"
             >
               <Typography fontSize="20px" align="center" gutterBottom>
                 Show do Milhão - Versão Conhecimentos Gerais
@@ -60,7 +62,7 @@ function App() {
               justifyContent="center"
               gap={5}
               mb={4}
-              width="50%"
+              width="25%"
             >
               <Typography fontSize="20px" align="center" gutterBottom>
                 Show do Milhão - Versão Anime
@@ -70,6 +72,48 @@ function App() {
                   variant="contained"
                   color="primary"
                   onClick={() => handleGameSelection("milhaoAnime")}
+                >
+                  Jogar
+                </Button>
+              </Box>
+            </Box>
+            <Box
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              gap={5}
+              mb={4}
+              width="25%"
+            >
+              <Typography fontSize="20px" align="center" gutterBottom>
+                Quiz Comum
+              </Typography>
+              <Box width="25%" display="flex" alignSelf="center">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleGameSelection("comum")}
+                >
+                  Jogar
+                </Button>
+              </Box>
+            </Box>
+            <Box
+              display="flex"
+              flexDirection="column"
+              justifyContent="center"
+              gap={5}
+              mb={4}
+              width="25%"
+            >
+              <Typography fontSize="20px" align="center" gutterBottom>
+                Quiz Anime
+              </Typography>
+              <Box width="25%" display="flex" alignSelf="center">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleGameSelection("anime")}
                 >
                   Jogar
                 </Button>
@@ -85,6 +129,12 @@ function App() {
         )}
         {selectedGame === "milhaoAnime" && (
           <ShowMilhaoAnime onBack={resetGame} />
+        )}
+        {selectedGame === "comum" && (
+          <QuizComumGeral onBack={resetGame} />
+        )}
+        {selectedGame === 'anime' && (
+          <QuizComumAnime onBack={resetGame}/>
         )}
       </Box>
     </>

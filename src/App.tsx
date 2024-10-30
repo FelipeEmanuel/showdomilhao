@@ -1,17 +1,17 @@
 import { useState } from "react";
-import ShowMilhaoGeral from "./components/showMilhaoGeral";
 import "./index.css";
 import { Box, Button, Typography } from "@mui/material";
-import ShowMilhaoAnime from "./components/showMilhaoAnime";
 import QuizComumGeral from "./components/quizComumGeral";
 import QuizComumAnime from "./components/quizComumAnime";
+import { GameType } from "./types/quiz.type";
+import QuizComumSeries from "./components/quizComumSeries";
+import QuizAberturas from "./components/quizAberturas";
+import QuizImagens from "./components/quizImagens";
 
 function App() {
-  const [selectedGame, setSelectedGame] = useState<
-    "milhaoGeral" | "milhaoAnime" | null | "comum" | "anime"
-  >(null);
+  const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
 
-  const handleGameSelection = (game: "milhaoGeral" | "milhaoAnime" | "comum" | "anime") => {
+  const handleGameSelection = (game: GameType) => {
     setSelectedGame(game);
   };
 
@@ -23,98 +23,80 @@ function App() {
     <>
       {selectedGame === null && (
         <>
-          <Typography fontSize="40px" align="center" gutterBottom>
-            Bem-vindo, escolha o que quer jogar!
+          <Typography fontSize="40px" align="center" gutterBottom color="#e1651a" fontWeight={700}>
+            BEM-VINDO, ESCOLHA O QUE QUER JOGAR!
           </Typography>
-          <Box
-            display="flex"
-            flexDirection="row"
-            justifyContent="center"
-            gap={5}
-            mb={4}
-            bgcolor="white"
-            height={400}
-          >
-            <Box
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              gap={5}
-              mb={4}
-              width="25%"
-            >
-              <Typography fontSize="20px" align="center" gutterBottom>
-                Show do Milhão - Versão Conhecimentos Gerais
+          <Box display="flex" flexDirection="row" justifyContent="center" gap="10px" mb={4} bgcolor="#e1651a" height="100%" flexWrap="wrap" padding="10px 0px">
+            {/* Quiz de Anime */}
+            <Box display="flex" flexDirection="column" justifyContent="center" gap="15px" mb={4} width="calc(33.33% - 15px)" border="2px solid #7349ac">
+              <Typography fontSize="20px" align="center" gutterBottom color="#7349ac" fontWeight={1000} paddingTop="20px">
+                Quiz de Anime
               </Typography>
-              <Box width="25%" display="flex" alignSelf="center">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleGameSelection("milhaoGeral")}
-                >
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <img src="../src/assets/luffy2.jpg" alt="Anime" style={{ width: '350px', height: '200px' }} />
+              </Box>
+              <Box width="100%" display="flex" justifyContent="center" alignItems="center" padding="20px 10px">
+                <Button variant="contained" sx={{backgroundColor: "#7349AC"}} onClick={() => handleGameSelection(GameType.quizAnime)}>
                   Jogar
                 </Button>
               </Box>
             </Box>
-            <Box
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              gap={5}
-              mb={4}
-              width="25%"
-            >
-              <Typography fontSize="20px" align="center" gutterBottom>
-                Show do Milhão - Versão Anime
+
+            {/* Quiz de Séries/Filmes */}
+            <Box display="flex" flexDirection="column" justifyContent="center" gap="15px" mb={4} width="calc(33.33% - 15px)" border="2px solid #7349ac">
+              <Typography fontSize="20px" align="center" gutterBottom color="#7349ac" fontWeight={1000} paddingTop="20px">
+                Quiz de Séries/Filmes
               </Typography>
-              <Box width="25%" display="flex" alignSelf="center">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleGameSelection("milhaoAnime")}
-                >
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <img src="../src/assets/got2.webp" alt="Séries" style={{ width: '350px', height: '200px' }} />
+              </Box>
+              <Box width="100%" display="flex" justifyContent="center" alignItems="center" padding="20px 10px">
+                <Button variant="contained" sx={{backgroundColor: "#7349AC"}} onClick={() => handleGameSelection(GameType.quizSeries)}>
                   Jogar
                 </Button>
               </Box>
             </Box>
-            <Box
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              gap={5}
-              mb={4}
-              width="25%"
-            >
-              <Typography fontSize="20px" align="center" gutterBottom>
-                Quiz Comum
+
+            {/* Quiz de Conhecimentos Gerais*/}
+            <Box display="flex" flexDirection="column" justifyContent="center" gap="15px" mb={4} width="calc(33.33% - 15px)" border="2px solid #7349ac">
+              <Typography fontSize="20px" align="center" gutterBottom color="#7349ac" fontWeight={1000} paddingTop="20px">
+                Quiz de Conhecimentos Gerais
               </Typography>
-              <Box width="25%" display="flex" alignSelf="center">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleGameSelection("comum")}
-                >
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <img src="../src/assets/conhecimentosgerais.webp" alt="Conhecimentos" style={{ width: '350px', height: '200px' }} />
+              </Box>
+              <Box width="100%" display="flex" justifyContent="center" alignItems="center" padding="20px 10px">
+                <Button variant="contained" sx={{backgroundColor: "#7349AC"}} onClick={() => handleGameSelection(GameType.quizGeral)}>
                   Jogar
                 </Button>
               </Box>
             </Box>
-            <Box
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              gap={5}
-              mb={4}
-              width="25%"
-            >
-              <Typography fontSize="20px" align="center" gutterBottom>
-                Quiz Anime
+
+            {/* Quiz de Aberturas de anime */}
+            <Box display="flex" flexDirection="column" justifyContent="center" gap="15px" mb={4} width="calc(33.33% - 15px)" border="2px solid #7349ac">
+              <Typography fontSize="20px" align="center" gutterBottom color="#7349ac" fontWeight={1000} paddingTop="20px">
+                Quiz Aberturas de Anime
               </Typography>
-              <Box width="25%" display="flex" alignSelf="center">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleGameSelection("anime")}
-                >
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <img src="../src/assets/aberturas.jpg" alt="Aberturas" style={{ width: '350px', height: '200px' }} />
+              </Box>
+              <Box width="100%" display="flex" justifyContent="center" alignItems="center" padding="20px 10px">
+                <Button variant="contained" sx={{backgroundColor: "#7349AC"}} onClick={() => handleGameSelection(GameType.quizAberturas)}>
+                  Jogar
+                </Button>
+              </Box>
+            </Box>
+
+            {/* Quiz de Imagens */}
+            <Box display="flex" flexDirection="column" justifyContent="center" gap="15px" mb={4} width="calc(33.33% - 15px)" border="2px solid #7349ac">
+              <Typography fontSize="20px" align="center" gutterBottom color="#7349ac" fontWeight={1000} paddingTop="20px">
+                Quiz de Imagens
+              </Typography>
+              <Box display="flex" justifyContent="center" alignItems="center">
+                <img src="../src/assets/guess_what.jpg" alt="Imagens" style={{ width: '350px', height: '200px' }} />
+              </Box>
+              <Box width="100%" display="flex" justifyContent="center" alignItems="center" padding="20px 10px">
+                <Button variant="contained" sx={{backgroundColor: "#7349AC"}} onClick={() => handleGameSelection(GameType.quizImagens)}>
                   Jogar
                 </Button>
               </Box>
@@ -123,18 +105,21 @@ function App() {
         </>
       )}
 
-      <Box display="flex" justifyContent="center">
-        {selectedGame === "milhaoGeral" && (
-          <ShowMilhaoGeral onBack={resetGame} />
+      <Box display="flex" justifyContent="center" width="100%">
+        {selectedGame === GameType.quizAnime && (
+          <QuizComumAnime onBack={resetGame}/>
         )}
-        {selectedGame === "milhaoAnime" && (
-          <ShowMilhaoAnime onBack={resetGame} />
-        )}
-        {selectedGame === "comum" && (
+        {selectedGame === GameType.quizGeral && (
           <QuizComumGeral onBack={resetGame} />
         )}
-        {selectedGame === 'anime' && (
-          <QuizComumAnime onBack={resetGame}/>
+        {selectedGame === GameType.quizSeries && (
+          <QuizComumSeries onBack={resetGame} />
+        )}
+        {selectedGame === GameType.quizAberturas && (
+          <QuizAberturas onBack={resetGame}/>
+        )}
+        {selectedGame === GameType.quizImagens && (
+          <QuizImagens onBack={resetGame}/> 
         )}
       </Box>
     </>

@@ -74,3 +74,11 @@ export const getPremioPerdedor = (questionNumber: number): string => {
     return questionMap[questionNumber] || questionNumber.toString();
 };
 
+export enum GameType {
+  quizAnime = 'Quiz de Anime',
+  quizGeral = 'Quiz de Conhecimentos Gerais',
+  quizSeries = 'Quiz de Séries/Filmes',
+  quizAberturas = 'Quiz de Aberturas',
+  quizImagens = 'Quiz de Imagens'
+}
+

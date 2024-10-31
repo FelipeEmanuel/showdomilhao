@@ -1,7 +1,34 @@
-import { Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, List, ListItem, TextField, Typography } from '@mui/material';
-import AccessAlarmIcon from "@mui/icons-material/AccessAlarm";
+import { Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, List, ListItem, styled, TextField, Typography } from '@mui/material';;
 import React from 'react';
 import axios from "axios";
+
+const CssTextField = styled(TextField)(() => ({
+  "& label": {
+      color: "#000000",
+      fontSize: '14px',
+      fontWeight: '400',
+  },
+  "& label.Mui-focused": {
+      color: "#000000",
+  },
+  "& .MuiInput-underline:before": {
+      borderColor: "#000000",
+  },
+  "& .MuiInput-underline:after": {
+      borderColor: "#000000",
+  },
+  "& .MuiInput-root": {
+      "& fieldset": {
+          borderColor: "#000000",
+      },
+      "&:hover fieldset": {
+          borderColor: "#000000",
+      },
+      "&.Mui-focused fieldset": {
+          borderColor: "#000000",
+      },
+  }
+}))
 
 interface Question {
   id: number;
@@ -14,13 +41,14 @@ interface Question {
 interface Team {
   name: string;
   score: number;
+  correctStreak: number;
 }
 
-interface showMilhaoGeralProps {
+interface quizAnimeProps {
   onBack: () => void;
 }
 
-interface showMilhaoGeralState {
+interface quizAnimeState {
   questions: Question[];
   currentQuestion: Question | null;
   selectedAnswer: number | null;
@@ -38,13 +66,13 @@ interface showMilhaoGeralState {
   numQuestions: number | null;
   quizSetup: boolean;
   openSuccessDialog: boolean;
-  winningTeam: Team[] | null;
+  winningTeam: Team | null;
 }
 
-class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGeralState> {
+class QuizComumAnime extends React.Component<quizAnimeProps, quizAnimeState> {
   countdownInterval: number | undefined;
 
-  constructor(props: showMilhaoGeralProps) {
+  constructor(props: quizAnimeProps) {
     super(props);
 
     this.state = {
@@ -71,7 +99,7 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
 
   componentDidMount() {
     axios
-    .get("http://localhost:3000/usedQuestions")
+    .get("http://localhost:3000/usedQuestionsAnime")
     .then((response) => {
       const usedQuestionIds = response.data || [];
       this.setState({ usedQuestions: new Set(usedQuestionIds) });
@@ -94,7 +122,7 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
   handleSetupAndStartQuiz = () => {
 
     const { teamNames } = this.state
-    const teams = teamNames.map((name) => ({name, score: 0}))
+    const teams = teamNames.map((name) => ({name, score: 0, correctStreak: 0}))
 
     this.setState({ 
       teams,
@@ -126,6 +154,7 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
   };
 
   handleCheckAnswer = () => {
+    console.log('chamou o checkanswer')
     this.setState({ checkingAnswer: true });
 
     setTimeout(() => {
@@ -135,9 +164,15 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
 
       // Verifica se a resposta está correta
       if (selectedAnswer === currentQuestion?.correctAnswer) {
+        console.log('chamou')
         const updatedTeams = [...teams];
-        updatedTeams[currentTeamIndex].score += 1;
-        this.setState({ teams: updatedTeams });
+        updatedTeams[currentTeamIndex].score += 1; // Incrementa a pontuação
+        updatedTeams[currentTeamIndex].correctStreak += 1; // Incrementa a sequência de acertos
+        this.setState({teams: updatedTeams})
+      } else {
+        const updatedTeams = [...teams];
+          updatedTeams[currentTeamIndex].correctStreak = 0; // Incrementa a sequência de acertos
+          this.setState({teams: updatedTeams})
       }
 
     }, 2000);
@@ -148,7 +183,7 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
     const { currentQuestion } = this.state;
     
     if (currentQuestion) {
-      axios.post("http://localhost:3000/usedQuestions", { questionId: currentQuestion.id })
+      axios.post("http://localhost:3000/usedQuestionsAnime", { questionId: currentQuestion.id })
         .then((response) => {
           console.log(`Used question ID ${currentQuestion.id} sent successfully:`, response.data);
         })
@@ -174,11 +209,11 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
   };
 
   resetUsedQuestions = () => {
-    axios.get("http://localhost:3000/usedQuestions")
+    axios.get("http://localhost:3000/usedQuestionsAnime")
       .then((response) => {
         const usedQuestions = response.data; // Obtém todos os itens usados
         const deleteRequests = usedQuestions.map(question => 
-          axios.delete(`http://localhost:3000/usedQuestions/${question.id}`) // Deleta cada item
+          axios.delete(`http://localhost:3000/usedQuestionsAnime/${question.id}`) // Deleta cada item
         );
 
         // Aguarda a conclusão de todas as requisições de deleção
@@ -196,11 +231,22 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
   endQuiz = () => {
 
     const maxScore = Math.max(...this.state.teams.map(team => team.score));
-    const winningTeams = this.state.teams.filter(team => team.score === maxScore);
+    const tiedTeams = this.state.teams.filter(team => team.score === maxScore);
+
+    let winningTeam;
+
+    if (tiedTeams.length === 1) {
+      // Se houver apenas um time com a maior pontuação, ele é o vencedor
+      winningTeam = tiedTeams[0];
+    } else {
+      // Desempate: encontra o time com a maior sequência de acertos
+      const maxStreak = Math.max(...tiedTeams.map(team => team.correctStreak));
+      winningTeam = tiedTeams.find(team => team.correctStreak === maxStreak);
+    }
 
     this.setState({
       openSuccessDialog: true,
-      winningTeam: winningTeams
+      winningTeam: winningTeam
     });
 
   };
@@ -209,20 +255,19 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
     const {
       quizStarted, currentQuestion, selectedAnswer, showAnswer, checkingAnswer,
       numQuestions, numberOfTeams, teamNames, openSuccessDialog, teams, currentTeam, 
-      winningTeam, currentQuestionIndex, usedQuestions
+      winningTeam, currentQuestionIndex
     } = this.state;
 
     const questionNumber = this.state.currentQuestionIndex + 1;
     const numTotal = this.state.numQuestions;
 
-    console.log(usedQuestions)
     return (
       <Box width="100%">
         <Button variant="contained" color="success" onClick={this.props.onBack} style={{ marginBottom: "20px" }}>
           Voltar
         </Button>
         {!quizStarted ? (
-          <Card style={{ marginTop: "50px", padding: "20px" }}>
+          <Card style={{ marginTop: "50px", padding: "20px", backgroundColor: "#e1651a" }}>
             <CardContent>
               <Box display="flex" flexDirection="row" justifyContent="space-between">
                 <Box width="120px"></Box>
@@ -238,28 +283,60 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
                   Resetar Perguntas
                 </Button>
               </Box>
-              <TextField
-                label="Número de Equipes"
-                type="number"
-                value={numberOfTeams}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  this.setState({ numberOfTeams: value === '' ? null : Number(value) });
-                }}
-                fullWidth
-                margin="normal"
-              />
-              <TextField
-                label="Número de Perguntas"
-                type="number"
-                value={numQuestions}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  this.setState({ numQuestions: value === '' ? null : Number(value) });
-                }}
-                fullWidth
-                margin="normal"
-              />
+              <Box display="flex" flexDirection="column" gap="15px">
+                <CssTextField
+                  label="Número de Equipes"
+                  variant='standard'
+                  value={numberOfTeams}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const newNumberOfTeams = value === '' ? null : Number(value);
+
+                    // Ajusta o array de nomes de times para o novo número de equipes
+                    let newTeamNames = [...teamNames];
+                    if (Number(newNumberOfTeams) < newTeamNames.length) {
+                      // Reduz o array se o número de equipes for menor
+                      newTeamNames = newTeamNames.slice(0, Number(newNumberOfTeams));
+                    } else {
+                      // Aumenta o array preenchendo com strings vazias
+                      while (newTeamNames.length < Number(newNumberOfTeams)) {
+                        newTeamNames.push('');
+                      }
+                    }
+
+                    this.setState({
+                      numberOfTeams: newNumberOfTeams,
+                      teamNames: newTeamNames,
+                    });
+                  }}
+                  onKeyPress={(e) => {
+                    // Permitir apenas números no input
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  fullWidth
+                />
+                <CssTextField
+                  label="Número de Perguntas"
+                  variant='standard'
+                  value={numQuestions}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (/^\d*$/.test(value)) {
+                      this.setState({ numQuestions: value === '' ? null : Number(value) });
+                    }
+                  }}
+                  onKeyPress={(e) => {
+                    // Permitir apenas números no input
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  fullWidth
+                />
+              </Box>
+              
               {Number(numberOfTeams) > 0 &&
                 <Box paddingTop="20px">
                   <Typography fontSize="30px" gutterBottom>
@@ -269,8 +346,9 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
               }
               {
                 Array.from({ length: Number(numberOfTeams) }).map((_, index) => (
-                  <TextField
+                  <CssTextField
                     key={index}
+                    variant='standard'
                     label={`Nome da Equipe ${index + 1}`}
                     value={teamNames[index] || ''}
                     onChange={(e) => {
@@ -279,18 +357,20 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
                       this.setState({ teamNames: newTeamNames });
                     }}
                     fullWidth
-                    margin="normal"
-                  />
+                  />  
                 ))
               }
-              <Button variant="contained" color="primary" onClick={this.handleSetupAndStartQuiz} style={{ marginTop: "20px" }}>
+              <Button variant="contained" 
+                onClick={this.handleSetupAndStartQuiz} 
+                style={{ marginTop: "20px", backgroundColor: "#7349AC" }} 
+                disabled={teamNames.length !== numberOfTeams || teamNames.some((name) => !name) || numQuestions === 0 || numQuestions === null || numberOfTeams === 0 || numberOfTeams === null}>
                 Iniciar quiz
               </Button>
             </CardContent>
           </Card>
         ) : (
           <Box display="flex" flexDirection="row" width="100%">
-            <Card style={{ marginTop: "50px", padding: "20px", backgroundColor: "#00008b", width: '70%'}}>
+            <Card style={{ marginTop: "50px", padding: "20px", backgroundColor: "#e1651a", width: '70%'}}>
               <CardContent>
                 {currentQuestion && (
                   <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
@@ -330,7 +410,7 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
                             }}
                             onClick={() => !showAnswer && this.setState({ selectedAnswer: index })}
                           >
-                            {option}
+                            {index+1}) {option}
                           </ListItem>
                         ))}
                       </List>
@@ -349,7 +429,7 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
                 )}
               </CardContent>
             </Card>
-            <Card style={{ marginTop: "50px", padding: "20px", backgroundColor: "#00008b", width: '30%'}}>
+            <Card style={{ marginTop: "50px", padding: "20px", backgroundColor: "#7349AC", width: '30%'}}>
               <CardContent>
                 <Typography fontSize="25px" fontWeight={700} color="white" gutterBottom>
                   Ranking das Equipes
@@ -381,11 +461,11 @@ class QuizComumAnime extends React.Component<showMilhaoGeralProps, showMilhaoGer
                 </List>
               </CardContent>
             </Card>
-            <Dialog open={openSuccessDialog} onClose={() => this.setState({ openSuccessDialog: false })} maxWidth="md" fullWidth={true}>
-              <DialogTitle>Parabéns</DialogTitle>
-              <DialogContent>Você concluiu o quiz!</DialogContent>
-              <DialogActions>
-                <Button onClick={() => this.setState({ openSuccessDialog: false, quizStarted: false, numberOfTeams: null, numQuestions: null, teams: [], teamNames: [] })}>Fechar</Button>
+            <Dialog open={openSuccessDialog} onClose={() => this.setState({ openSuccessDialog: false })} maxWidth="sm" fullWidth={true}>
+              <DialogTitle>Parabéns {winningTeam?.name}!</DialogTitle>
+              <DialogContent>Você foi o vencedor do quiz!</DialogContent>
+              <DialogActions style={{ justifyContent: 'center' }}>
+                <Button onClick={() => this.setState({ openSuccessDialog: false, quizStarted: false, numberOfTeams: null, numQuestions: null, teams: [], teamNames: [] })}>Concluir</Button>
               </DialogActions>
             </Dialog>
           </Box>

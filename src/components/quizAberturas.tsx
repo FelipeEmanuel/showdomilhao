@@ -1,41 +1,19 @@
-import { Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, List, ListItem, styled, TextField, Typography } from '@mui/material';;
+import { Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, List, ListItem, Typography } from '@mui/material';;
 import React from 'react';
 import axios from "axios";
+import { CssTextField } from './cssTextField';
+import AudioPlayer from './audioPlayer';
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
+import MusicNoteIcon from "@mui/icons-material/MusicNote";
 
-const CssTextField = styled(TextField)(() => ({
-  "& label": {
-      color: "#000000",
-      fontSize: '14px',
-      fontWeight: '400',
-  },
-  "& label.Mui-focused": {
-      color: "#000000",
-  },
-  "& .MuiInput-underline:before": {
-      borderColor: "#000000",
-  },
-  "& .MuiInput-underline:after": {
-      borderColor: "#000000",
-  },
-  "& .MuiInput-root": {
-      "& fieldset": {
-          borderColor: "#000000",
-      },
-      "&:hover fieldset": {
-          borderColor: "#000000",
-      },
-      "&.Mui-focused fieldset": {
-          borderColor: "#000000",
-      },
-  }
-}))
-
-interface Question {
+interface Musica {
   id: number;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  dificuldade: string;
+  title: string;
+  options: string[],
+  url: string;
+  inicial: number;
+  final: number;
 }
 
 interface Team {
@@ -49,24 +27,24 @@ interface quizAberturasProps {
 }
 
 interface quizAberturasState {
-  questions: Question[];
-  currentQuestion: Question | null;
-  selectedAnswer: number | null;
+  musicas: Musica[];
+  currentMusica: Musica | null;
   showAnswer: boolean;
   quizStarted: boolean;
   checkingAnswer: boolean;
   showCheckAnswerButton: boolean;
-  currentQuestionIndex: number;
-  usedQuestions: Set<number>;
+  currentMusicaIndex: number;
+  usedMusicas: Set<number>;
   teams: Team[];
   currentTeam: Team | null;
   currentTeamIndex: number;
   teamNames: string[];
   numberOfTeams: number | null;
-  numQuestions: number | null;
+  numMusicas: number | null;
   quizSetup: boolean;
   openSuccessDialog: boolean;
   winningTeam: Team | null;
+  isPlaying: boolean
 }
 
 class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasState> {
@@ -76,45 +54,45 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
     super(props);
 
     this.state = {
-      questions: [],
-      currentQuestion: null,
-      selectedAnswer: null,
+      musicas: [],
+      currentMusica: null,
       showAnswer: false,
       quizStarted: false,
       checkingAnswer: false,
       showCheckAnswerButton: false,
-      currentQuestionIndex: 0,
-      usedQuestions: new Set(),
+      currentMusicaIndex: 0,
+      usedMusicas: new Set(),
       teams: [],
       currentTeamIndex: 0,
       teamNames: [],
       currentTeam: null,
       numberOfTeams: 0,
-      numQuestions: 0,
+      numMusicas: 0,
       quizSetup: false,
       openSuccessDialog: false,
-      winningTeam: null
+      winningTeam: null,
+      isPlaying: true
     };
   }
 
   componentDidMount() {
     axios
-    .get("http://localhost:3000/usedQuestionsAnime")
+    .get("http://localhost:3000/usedAberturas")
     .then((response) => {
-      const usedQuestionIds = response.data || [];
-      this.setState({ usedQuestions: new Set(usedQuestionIds) });
+      const usedMusicasIds = response.data || [];
+      this.setState({ usedMusicas: new Set(usedMusicasIds) });
     })
     .catch((error) => {
-      console.error("Error fetching used questions:", error);
+      console.error("Error fetching used musicas:", error);
     });
     
     axios
-      .get("http://localhost:3000/questionsAnime")
+      .get("http://localhost:3000/aberturas")
       .then((response) => {
-        this.setState({ questions: response.data });
+        this.setState({ musicas: response.data });
       })
       .catch((error) => {
-        console.error("There was an error fetching the questions!", error);
+        console.error("There was an error fetching the musicas!", error);
       });
 
   }
@@ -129,73 +107,58 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
       currentTeam: teams[0], 
       quizSetup: true, 
       quizStarted: true,
-      currentQuestionIndex: 0,
-      selectedAnswer: null,
+      currentMusicaIndex: 0,
       showAnswer: false,
     }, () => {
-      this.loadNewQuestion();
+      this.loadNewMusica();
     });
   };
 
-  loadNewQuestion = () => {
-    const availableQuestions = this.state.questions.filter(
-      (q) => !this.state.usedQuestions.has(q.id)
+  togglePlayPause = (value: boolean) => {
+    this.setState({isPlaying: value});
+  };
+
+  loadNewMusica = () => {
+    const availableMusicas = this.state.musicas.filter(
+      (q) => !this.state.usedMusicas.has(q.id)
     );
 
-    if (availableQuestions.length === 0) return;
+    if (availableMusicas.length === 0) return;
 
-    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    const selectedQuestion = availableQuestions[randomIndex];
+    const randomIndex = Math.floor(Math.random() * availableMusicas.length);
+    const selectedMusica = availableMusicas[randomIndex];
 
     this.setState((prevState) => ({
-      currentQuestion: selectedQuestion,
-      usedQuestions: new Set(prevState.usedQuestions).add(selectedQuestion.id)
+      currentMusica: selectedMusica,
+      isPlaying: true,
+      usedMusicas: new Set(prevState.usedMusicas).add(selectedMusica.id),
     }));
   };
 
   handleCheckAnswer = () => {
-    console.log('chamou o checkanswer')
-    this.setState({ checkingAnswer: true });
-
+    this.setState({isPlaying: false})
     setTimeout(() => {
-      const { selectedAnswer, currentQuestion, currentTeamIndex, teams } = this.state;
-
-      this.setState({ showAnswer: true, showCheckAnswerButton: false, checkingAnswer: false });
-
-      // Verifica se a resposta está correta
-      if (selectedAnswer === currentQuestion?.correctAnswer) {
-        console.log('chamou')
-        const updatedTeams = [...teams];
-        updatedTeams[currentTeamIndex].score += 1; // Incrementa a pontuação
-        updatedTeams[currentTeamIndex].correctStreak += 1; // Incrementa a sequência de acertos
-        this.setState({teams: updatedTeams})
-      } else {
-        const updatedTeams = [...teams];
-          updatedTeams[currentTeamIndex].correctStreak = 0; // Incrementa a sequência de acertos
-          this.setState({teams: updatedTeams})
-      }
-
+      this.setState({ showAnswer: true });
     }, 2000);
   };
 
-  handleNextQuestion = () => {
+  handleNextMusica = () => {
 
-    const { currentQuestion } = this.state;
+    const { currentMusica } = this.state;
     
-    if (currentQuestion) {
-      axios.post("http://localhost:3000/usedQuestionsAnime", { questionId: currentQuestion.id })
+    if (currentMusica) {
+      axios.post("http://localhost:3000/usedAberturas", { musicaId: currentMusica.id })
         .then((response) => {
-          console.log(`Used question ID ${currentQuestion.id} sent successfully:`, response.data);
+          console.log(`Used musica ID ${currentMusica.id} sent successfully:`, response.data);
         })
         .catch((error) => {
-          console.error(`Error sending used question ID ${currentQuestion.id}:`, error);
+          console.error(`Error sending used musica ID ${currentMusica.id}:`, error);
         });
 
       this.setState((prevState) => ({
-        usedQuestions: new Set(prevState.usedQuestions).add(currentQuestion.id),
+        usedMusicas: new Set(prevState.usedMusicas).add(currentMusica.id),
         showAnswer: false,
-        selectedAnswer: null,
-        currentQuestionIndex: this.state.currentQuestionIndex + 1,
+        currentMusicaIndex: this.state.currentMusicaIndex + 1,
       }));
   
       this.setState((prevState) => ({
@@ -204,16 +167,16 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
       })); 
     }
     
-    this.loadNewQuestion();
+    this.loadNewMusica();
     
   };
 
   resetUsedQuestions = () => {
     axios.get("http://localhost:3000/usedQuestionsAnime")
       .then((response) => {
-        const usedQuestions = response.data; // Obtém todos os itens usados
-        const deleteRequests = usedQuestions.map(question => 
-          axios.delete(`http://localhost:3000/usedQuestionsAnime/${question.id}`) // Deleta cada item
+        const usedMusicas = response.data; // Obtém todos os itens usados
+        const deleteRequests = usedMusicas.map(musica => 
+          axios.delete(`http://localhost:3000/usedAberturas/${musica.id}`) // Deleta cada item
         );
 
         // Aguarda a conclusão de todas as requisições de deleção
@@ -221,7 +184,7 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
       })
       .then(() => {
         console.log("All used questions cleared successfully.");
-        this.setState({ usedQuestions: new Set() }); // Limpa o estado local
+        this.setState({ usedMusicas: new Set() }); // Limpa o estado local
       })
       .catch((error) => {
         console.error("Error clearing used questions:", error);
@@ -253,13 +216,13 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
 
   render() {
     const {
-      quizStarted, currentQuestion, selectedAnswer, showAnswer, checkingAnswer,
-      numQuestions, numberOfTeams, teamNames, openSuccessDialog, teams, currentTeam, 
-      winningTeam, currentQuestionIndex
+      quizStarted, currentMusica, showAnswer, checkingAnswer,
+      numMusicas, numberOfTeams, teamNames, openSuccessDialog, teams, 
+      winningTeam, currentMusicaIndex, isPlaying
     } = this.state;
 
-    const questionNumber = this.state.currentQuestionIndex + 1;
-    const numTotal = this.state.numQuestions;
+    const questionNumber = this.state.currentMusicaIndex + 1;
+    const numTotal = this.state.numMusicas;
 
     return (
       <Box width="100%">
@@ -280,7 +243,7 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
                   sx={{width: 120, height: 50}}
                   onClick={this.resetUsedQuestions}
                 >
-                  Resetar Perguntas
+                  Resetar Músicas
                 </Button>
               </Box>
               <Box display="flex" flexDirection="column" gap="15px">
@@ -318,13 +281,13 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
                   fullWidth
                 />
                 <CssTextField
-                  label="Número de Perguntas"
+                  label="Número de Músicas"
                   variant='standard'
-                  value={numQuestions}
+                  value={numMusicas}
                   onChange={(e) => {
                     const value = e.target.value;
                     if (/^\d*$/.test(value)) {
-                      this.setState({ numQuestions: value === '' ? null : Number(value) });
+                      this.setState({ numMusicas: value === '' ? null : Number(value) });
                     }
                   }}
                   onKeyPress={(e) => {
@@ -363,7 +326,7 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
               <Button variant="contained" 
                 onClick={this.handleSetupAndStartQuiz} 
                 style={{ marginTop: "20px", backgroundColor: "#7349AC" }} 
-                disabled={teamNames.length !== numberOfTeams || teamNames.some((name) => !name) || numQuestions === 0 || numQuestions === null || numberOfTeams === 0 || numberOfTeams === null}>
+                disabled={teamNames.length !== numberOfTeams || teamNames.some((name) => !name) || numMusicas === 0 || numMusicas === null || numberOfTeams === 0 || numberOfTeams === null}>
                 Iniciar quiz
               </Button>
             </CardContent>
@@ -372,45 +335,64 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
           <Box display="flex" flexDirection="row" width="100%">
             <Card style={{ marginTop: "50px", padding: "20px", backgroundColor: "#e1651a", width: '70%'}}>
               <CardContent>
-                {currentQuestion && (
+                {currentMusica && (
                   <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
                     <Box bgcolor="white" width="100%" p="20px 0px">
                       <Typography fontSize="25px" fontWeight={700}>
-                        Pergunta {questionNumber}/{numTotal} 
-                      </Typography>
-                      <Typography fontSize="20px" fontWeight={700}>
-                        Equipe respondendo: {currentTeam?.name}
+                        {questionNumber}/{numTotal} 
                       </Typography>
                     </Box>
-                    <Box bgcolor="white" width="100%" p="20px 0px">
-                      <Typography fontSize="25px" fontWeight={700}>
-                        {currentQuestion?.question}
-                      </Typography>
+                    <Box 
+                      bgcolor="#1f2124" 
+                      height="200px"
+                      width="100%" 
+                      borderRadius="8px" 
+                      boxShadow="0 4px 8px rgba(0, 0, 0, 0.1)" 
+                      display="flex" 
+                      justifyContent="center" 
+                      alignItems="center"
+                      position="relative"
+                    >
+                      <IconButton
+                        onClick={() => this.togglePlayPause(isPlaying ? false : true)}
+                        style={{
+                          position: "absolute",
+                          top: "8px",
+                          right: "8px",
+                          color: "#e1651a"
+                        }}
+                      >
+                        {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+                      </IconButton>
+                      
+                      <MusicNoteIcon
+                        style={{
+                          position: "absolute",
+                          fontSize: "60px",
+                          color: "#e1651a",
+                          opacity: 0.3
+                        }}
+                      />
+                      <AudioPlayer videoUrl={currentMusica?.url} isPlaying={isPlaying} inicial={currentMusica?.inicial} final={currentMusica?.final}/>
                     </Box>
                     <Box width="100%">
                       <List>
-                        {currentQuestion.options.map((option, index) => (
+                        {currentMusica.options.map((option, index) => (
                           <ListItem
                             key={index}
                             style={{
-                              backgroundColor:
-                                selectedAnswer === index && !showAnswer
-                                  ? "yellow"
-                                  : showAnswer &&
-                                    index === currentQuestion.correctAnswer
+                              backgroundColor: 
+                                showAnswer && option === currentMusica.title
                                   ? "green"
-                                  : showAnswer && selectedAnswer === index
-                                  ? "red"
                                   : "white",
-                              cursor: showAnswer ? "default" : "pointer",
-                              color: showAnswer &&
-                                (index === currentQuestion.correctAnswer || selectedAnswer === index)
-                                ? "white"
-                                : "black",
+                              cursor: "default", // Desabilita o cursor de clique
+                              color:
+                                showAnswer && option === currentMusica.title
+                                  ? "white"
+                                  : "black",
                             }}
-                            onClick={() => !showAnswer && this.setState({ selectedAnswer: index })}
                           >
-                            {index+1}) {option}
+                            {index + 1}) {option}
                           </ListItem>
                         ))}
                       </List>
@@ -418,11 +400,11 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
                   </Box>
                 )}
                 {showAnswer && !checkingAnswer && (
-                  <Button variant="contained" onClick={currentQuestionIndex + 1 === numQuestions ? this.endQuiz : this.handleNextQuestion}>
-                    {currentQuestionIndex + 1 === numQuestions ? "Ver Resultados": "Próxima Pergunta"}
+                  <Button variant="contained" onClick={currentMusicaIndex + 1 === numMusicas ? this.endQuiz : this.handleNextMusica}>
+                    {currentMusicaIndex + 1 === numMusicas ? "Ver Resultados" : "Próxima Pergunta"}
                   </Button>
                 )}
-                {!showAnswer && selectedAnswer !== null && !checkingAnswer && (
+                {!showAnswer && (
                   <Button variant="contained" onClick={this.handleCheckAnswer}>
                     Verificar Resposta
                   </Button>
@@ -461,11 +443,16 @@ class QuizAberturas extends React.Component<quizAberturasProps, quizAberturasSta
                 </List>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent>
+
+              </CardContent>
+            </Card>
             <Dialog open={openSuccessDialog} onClose={() => this.setState({ openSuccessDialog: false })} maxWidth="sm" fullWidth={true}>
               <DialogTitle>Parabéns {winningTeam?.name}!</DialogTitle>
               <DialogContent>Você foi o vencedor do quiz!</DialogContent>
               <DialogActions style={{ justifyContent: 'center' }}>
-                <Button onClick={() => this.setState({ openSuccessDialog: false, quizStarted: false, numberOfTeams: null, numQuestions: null, teams: [], teamNames: [] })}>Concluir</Button>
+                <Button onClick={() => this.setState({ openSuccessDialog: false, quizStarted: false, numberOfTeams: null, numMusicas: null, teams: [], teamNames: [] })}>Concluir</Button>
               </DialogActions>
             </Dialog>
           </Box>
